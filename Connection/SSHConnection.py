@@ -2,13 +2,13 @@
 import os
 import paramiko
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Prompt
 import subprocess
 import pexpect
 # Importaciones necesarias de otras clases
 from Commands.CommandsExecutorCommand import CommandsExecutorCommand
 from Commands.FileTransferCommand import FileTransferCommand
+from Connection.ConnectionConfig import ConnectionConfig
 
 """
 Es la clase que permite realizar conexiones SSH al servidor utilizando la librería paramiko.
@@ -38,6 +38,23 @@ class SSHConnection:
         self.shell = None  # Se pone a True cuando se inicia el shell interactivo (para ejecutar comandos remotamente)
 
     """
+    Es un método estático que solicita al usuario los datos de conexión SSH.
+    Es estático porque no necesita una instancia previa de la clase para funcionar.
+    Devuelve una instancia de SSHConnection ya conectada o None si falla.
+    Llama al metódo connect() para poder realizar el intento de conexión SSH con el servidor.
+    """
+
+    @staticmethod
+    def create_connection():
+        host, username, port, auth_method = ConnectionConfig.ask_user_connection_data()
+
+        connection = SSHConnection(host, username, port, auth_method)  # Llama al constructor para crear una instancia
+        if connection.connect():  # Se llama al método connect() para establecer una conexión
+            return connection
+        else:
+            return None
+
+    """
     Muestra el submenú tras la conexión SSH exitosa.
     El usuario puede ejecutar comandos remotamente, transferir archivos o cerrar sesión.
     """
@@ -46,9 +63,7 @@ class SSHConnection:
         console = Console()
         options = {
             "1": ("Ejecutar comandos remotos", lambda: CommandsExecutorCommand(self.shell).run()),  # shell interactiva
-            "2": ("Transferir archivos", lambda: FileTransferCommand(self.client).run()),
-            # "2": ("Transferir archivos", lambda: FileTransferCommand(self.client, self.host, self.username,
-            #                                                                      self.port).run()),
+            "2": ("Transferir archivos", lambda: FileTransferCommand(self.client, self.host, self.username, self.port).run()),
             "3": ("Volver al menú principal", None)
         }
 
@@ -70,43 +85,6 @@ class SSHConnection:
             _, action = options[choice]
             if action:
                 action()  # Ejecuta la opción seleccionada llamando a su correspondiente clase(responsabilidad delegada)
-
-    """
-    Es un método estático que solicita al usuario los datos de conexión SSH.
-    Es estático porque no necesita una instancia previa de la clase para funcionar.
-    Devuelve una instancia de SSHConnection ya conectada o None si falla.
-    Llama al metódo connect() para poder realizar el intento de conexión SSH con el servidor.
-    """
-
-    @staticmethod
-    def ask_user_connection_data():
-        console = Console()
-        console.print("\n[bold green]🌐 Iniciar conexión SSH[/bold green]")
-
-        # ⚠ Panel de advertencia si elige métodos que requieren clave
-        console.print(Panel.fit(
-            "[yellow]⚠ Para autenticación por clave, agente o certificado, debe haber generado previamente un par de claves SSH (pública y privada) "
-            "y debe haber copiado la clave pública al servidor remoto.\n\n"
-            "Esto puede hacerlo desde la opción 2 del menú principal ('Configurar claves SSH').[/yellow]",
-            title="Advertencia importante",
-            border_style="red"
-        ))
-
-        host = Prompt.ask("[💻] Host")
-        username = Prompt.ask("[👤] Usuario")
-        port = Prompt.ask("[🔢] Puerto", default="22")
-
-        auth_method = Prompt.ask(
-            "[ ] ¿Método de autenticación?",
-            choices=["contraseña", "clave", "agente", "certificado"],
-            default="contraseña"
-        )
-
-        connection = SSHConnection(host, username, port, auth_method)  # Llama al constructor para crear una instancia
-        if connection.connect():  # Se llama al método connect() para establecer una conexión
-            return connection
-        else:
-            return None
 
     """
     Método que establece una conexión SSH solicitando datos al usuario.
@@ -172,8 +150,7 @@ class SSHConnection:
                 # Si no hay claves cargadas, se pregunta al usuario si quiere añadirla al agente
                 if not agent_keys:
                     self.console.print("[yellow]⚠ No hay claves disponibles en el agente SSH[/yellow]")
-                    wants_to_add = Prompt.ask("[ ] ¿Desea añadir una clave al agente ahora?", choices=["sí", "no"],
-                                          default="sí")
+                    wants_to_add = Prompt.ask("[ ] ¿Desea añadir una clave al agente ahora?", choices=["sí", "no"], default="sí")
 
                     # Si el usuario dice que sí, entra por este camino
                     if wants_to_add == "sí":

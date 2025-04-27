@@ -69,7 +69,7 @@ class KeyManagerCommand:
             "[ ] Ruta del directorio donde guardar las claves",
             default="~/.ssh"
         )
-        folder = os.path.expanduser(folder) #  Obtiene la ruta absoluta
+        folder = os.path.expanduser(folder)  # Obtiene la ruta absoluta
 
         # Construir rutas completas para clave privada y pública
         private_key = os.path.join(folder, "clave_privada")
@@ -124,7 +124,7 @@ class KeyManagerCommand:
                 return
 
             # Inicia una conexión SSH
-            ssh_conn = SSHConnection.ask_user_connection_data()
+            ssh_conn = SSHConnection.create_connection()
             if not ssh_conn:
                 self.console.print("[red]✖ No se pudo establecer la conexión SSH.[/red]")
                 return
@@ -200,12 +200,12 @@ class KeyManagerCommand:
                 return
 
             # Inicia nueva conexión SSH
-            ssh_conn = SSHConnection.ask_user_connection_data()
+            ssh_conn = SSHConnection.create_connection()
             if not ssh_conn:
                 self.console.print("[red]✖ No se pudo establecer la conexión SSH.[/red]")
                 return
 
-            self.client = ssh_conn.get_client() # Guarda el cliente resultante
+            self.client = ssh_conn.get_client()  # Guarda el cliente resultante
 
         try:
             # Ejecuta el comando remoto para leer el archivo authorized_keys

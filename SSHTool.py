@@ -5,8 +5,6 @@ from rich.prompt import Prompt
 from rich.panel import Panel
 # Importaciones necesarias de otras clases
 from Connection.SSHConnection import SSHConnection
-from Commands.CommandsExecutorCommand import CommandsExecutorCommand
-from Commands.FileTransferCommand import FileTransferCommand
 from Commands.KeyManagerCommand import KeyManagerCommand
 
 '''
@@ -62,26 +60,12 @@ class SSHTool:
     """
     def connect_server(self):
         self.console.print("\n[bold]Conectar a un servidor SSH[/bold]", style="green")
-
-        self.ssh_connection = SSHConnection.ask_user_connection_data()
+        self.ssh_connection = SSHConnection.create_connection()
         if self.ssh_connection:
             self.ssh_connection.show_session_menu()
-
-    """
-    Método que inicia la ejecución de comandos remotos sobre una sesión SSH activa.
-    Utiliza la clase CommandsExecutorCommand.
-    """
-    def execute_commands(self):
-        executor = CommandsExecutorCommand(self.ssh_connection.get_shell())
-        executor.run()
-
-    """
-    Método que inicia el proceso de transferencia de archivos por SSH.
-    Utiliza la clase FileTransferCommand.
-    """
-    def transfer_files(self):
-        transfer = FileTransferCommand(self.ssh_connection.get_client())
-        transfer.run()
+        else:
+            print("\nError al crear la conexión")
+            sys.exit(-1)
 
     """
     Método que permite gestionar claves SSH locales y remotas:

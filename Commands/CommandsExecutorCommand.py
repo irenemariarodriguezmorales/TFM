@@ -78,6 +78,6 @@ class CommandsExecutorCommand:
                 (Lee hasta 1024 bytes y convierte los bytes recibidos a una cadena de texto legible.
                 Si hay caracteres que no se pueden decodificar correctamente los ignora).
                 """
-                output = self.shell.recv(1024).decode("utf-8", errors="ignore") # Guarda la respuesta para mostrarla
+                output = self.shell.recv(1024).decode("utf-8", errors="ignore")  # Guarda la respuesta para mostrarla
                 print(output, end='', flush=True)  # Imprime la salida directamente en consola
             time.sleep(0.1)  # Pequeña pausa para evitar uso excesivo de CPU
