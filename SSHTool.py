@@ -14,6 +14,41 @@ que elija el usuario (conexión a un servidor y gestión de claves SSH).
 '''
 
 
+def show_help():
+    help_text = """
+🔐 SSH Tool - Ayuda de uso
+
+Uso:
+  python3 SSHTool.py           Inicia la herramienta con el menú principal
+  python3 SSHTool.py --help    Muestra este mensaje de ayuda
+  python3 SSHTool.py -h        Muestra este mensaje de ayuda
+
+Funcionalidades:
+  1. Conectar a un servidor SSH
+     → Establece una conexión SSH mediante contraseña, clave, agente o certificado.
+
+  2. Configurar claves SSH
+     → Opciones para generar claves, copiarlas al servidor y ver claves autorizadas.
+
+  Tras realizar realizar una conexión SSH a un servidor podrá realizar las siguiente acciones:
+  
+  1. Transferir archivos
+     → Envía o descarga archivos usando SFTP o SCP.
+
+  2. Ejecutar comandos remotos
+     → Acceso a terminal SSH interactiva con salida en tiempo real.
+
+  3. Salir
+     → Cierra la conexión y finaliza el programa.
+
+Consejo:
+  Use primero la opción de "Configurar claves SSH" para evitar errores si desea autenticación por clave, agente y/o certificado.
+
+"""
+    print(help_text)
+    sys.exit(0)
+
+
 class SSHTool:
     """
     Este es el constructor.
@@ -30,6 +65,7 @@ class SSHTool:
     """
     Muestra el menú principal de la herramienta y gestiona la elección de opciones.
     """
+
     def display_main_menu(self):
         self.console.print(Panel.fit("🔐 [bold blue]SSH Tool - Herramienta para gestión SSH[/bold blue]"))
 
@@ -58,14 +94,15 @@ class SSHTool:
     Método que inicia el proceso de conexión SSH preguntando por host, usuario y puerto (método from_user_input()).
     Si la conexión es exitosa, delega en SSHConnection para mostrar su menú propio (método show_session_menu()).
     """
+
     def connect_server(self):
         self.console.print("\n[bold]Conectar a un servidor SSH[/bold]", style="green")
         self.ssh_connection = SSHConnection.create_connection()
         if self.ssh_connection:
             self.ssh_connection.show_session_menu()
         else:
-            print("\nError al crear la conexión")
-            sys.exit(-1)
+            self.console.print(
+                "[bold red]\n✖ No se pudo establecer la conexión SSH. Volviendo al menú principal...[/bold red]")
 
     """
     Método que permite gestionar claves SSH locales y remotas:
@@ -74,6 +111,7 @@ class SSHTool:
     - Ver claves existentes en el servidor
     Se llama a la clase KeyManagerCommand.
     """
+
     def manage_keys(self):
         ssh_client = self.ssh_connection.get_client() if self.ssh_connection else None
         manager = KeyManagerCommand(ssh_client)
@@ -82,6 +120,7 @@ class SSHTool:
     """
     Método encargado de finalizar la ejecución del programa y muestra un mensaje de despedida.
     """
+
     def exit_tool(self):
         self.console.print("\n👋 Saliendo de SSH Tool...", style="bold red")
         self.running = False
@@ -89,6 +128,8 @@ class SSHTool:
 
 # Punto donde comienza la ejecución de la herramienta
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] in ("--help", "--h"):
+        show_help()
     try:
         tool = SSHTool()
         tool.display_main_menu()

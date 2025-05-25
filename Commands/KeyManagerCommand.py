@@ -83,8 +83,8 @@ class KeyManagerCommand:
         # Si ya existen las claves, preguntar si sobrescribirlas
         if os.path.exists(private_key) or os.path.exists(public_key):
             self.console.print(f"[yellow]⚠ Ya existen claves en: {folder}[/yellow]")
-            overwrite = Prompt.ask("[ ] ¿Desea sobrescribirlas?", choices=["sí", "no"], default="no")
-            if overwrite != "sí":
+            overwrite = Prompt.ask("[ ] ¿Desea sobrescribirlas?", choices=["si", "no"], default="no")
+            if overwrite != "si":
                 self.console.print("[dim]Operación cancelada por el usuario.[/dim]")
                 return
 
@@ -118,8 +118,8 @@ class KeyManagerCommand:
         # Si no hay conexión SSH activa, se pregunta al usuario si quiere realizarla para poder seguir con la acción
         if not self.client:
             self.console.print("[yellow]⚠ No hay conexión SSH activa.[/yellow]")
-            wants_connect = Prompt.ask("[ ] ¿Desea conectarse ahora al servidor?", choices=["sí", "no"], default="sí")
-            if wants_connect != "sí":
+            wants_connect = Prompt.ask("[ ] ¿Desea conectarse ahora al servidor?", choices=["si", "no"], default="si")
+            if wants_connect != "si":
                 self.console.print("[dim]Operación cancelada.[/dim]")
                 return
 
@@ -194,8 +194,8 @@ class KeyManagerCommand:
         # Verifica si hay cliente SSH activo
         if not self.client:
             self.console.print("[yellow]⚠ No hay conexión SSH activa.[/yellow]")
-            wants_connect = Prompt.ask("[ ] ¿Desea conectarse ahora al servidor?", choices=["sí", "no"], default="sí")
-            if wants_connect != "sí":
+            wants_connect = Prompt.ask("[ ] ¿Desea conectarse ahora al servidor?", choices=["si", "no"], default="si")
+            if wants_connect != "si":
                 self.console.print("[dim]Operación cancelada.[/dim]")
                 return
 

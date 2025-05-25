@@ -9,6 +9,7 @@ import pexpect
 from Commands.CommandsExecutorCommand import CommandsExecutorCommand
 from Commands.FileTransferCommand import FileTransferCommand
 from Connection.ConnectionConfig import ConnectionConfig
+from Commands.TunnelManagerCommand import TunnelManagerCommand
 
 """
 Es la clase que permite realizar conexiones SSH al servidor utilizando la librería paramiko.
@@ -64,7 +65,8 @@ class SSHConnection:
         options = {
             "1": ("Ejecutar comandos remotos", lambda: CommandsExecutorCommand(self.shell).run()),  # shell interactiva
             "2": ("Transferir archivos", lambda: FileTransferCommand(self.client, self.host, self.username, self.port).run()),
-            "3": ("Volver al menú principal", None)
+            "3": ("Gestionar túneles SSH", lambda: TunnelManagerCommand(self).run()),
+            "4": ("Volver al menú principal", None)
         }
 
         """
@@ -78,7 +80,7 @@ class SSHConnection:
                 console.print(f"[cyan]{key}[/cyan]. {desc}")
 
             choice = Prompt.ask("Seleccione una opción", choices=list(options.keys()))
-            if choice == "3":
+            if choice == "4":
                 self.close()  # Cierra la conexión y vuelve al menú principal
                 break
 
@@ -150,10 +152,10 @@ class SSHConnection:
                 # Si no hay claves cargadas, se pregunta al usuario si quiere añadirla al agente
                 if not agent_keys:
                     self.console.print("[yellow]⚠ No hay claves disponibles en el agente SSH[/yellow]")
-                    wants_to_add = Prompt.ask("[ ] ¿Desea añadir una clave al agente ahora?", choices=["sí", "no"], default="sí")
+                    wants_to_add = Prompt.ask("[ ] ¿Desea añadir una clave al agente ahora?", choices=["si", "no"], default="si")
 
-                    # Si el usuario dice que sí, entra por este camino
-                    if wants_to_add == "sí":
+                    # Si el usuario dice que si, entra por este camino
+                    if wants_to_add == "si":
                         key_path = Prompt.ask("[ ] Ruta de la clave privada a añadir", default="~/.ssh/clave_privada")
                         key_path = os.path.expanduser(key_path)  # Obtiene ruta absoluta
 
@@ -195,12 +197,12 @@ class SSHConnection:
                 ca_key_path = None  # Se usará solo si es necesario
 
                 # 1. ¿Ya tienes un certificado firmado?
-                has_cert = Prompt.ask("[ ] ¿Tiene ya un certificado digital generado?", choices=["sí", "no"],
+                has_cert = Prompt.ask("[ ] ¿Tiene ya un certificado digital generado?", choices=["si", "no"],
                                       default="no")
 
                 if has_cert == "no":
                     # 2. ¿Quieres generarlo ahora?
-                    wants_generate = Prompt.ask("[ ] ¿Desea generar uno ahora?", choices=["sí", "no"], default="sí")
+                    wants_generate = Prompt.ask("[ ] ¿Desea generar uno ahora?", choices=["si", "no"], default="si")
                     if wants_generate == "no":
                         self.console.print("[yellow]❌ Cancelando autenticación por certificado...[/yellow]")
                         return
@@ -225,9 +227,9 @@ class SSHConnection:
                     # 5. Generar clave CA si no existe
                     if not os.path.exists(ca_key_path):
                         self.console.print(f"[yellow]⚠ No se encontró una clave de CA en {ca_key_path}[/yellow]")
-                        create_ca = Prompt.ask("[ ] ¿Desea generar una nueva clave de CA?", choices=["sí", "no"],
-                                               default="sí")
-                        if create_ca == "sí":
+                        create_ca = Prompt.ask("[ ] ¿Desea generar una nueva clave de CA?", choices=["si", "no"],
+                                               default="si")
+                        if create_ca == "si":
                             subprocess.run(["ssh-keygen", "-t", "rsa", "-b", "2048", "-f", ca_key_path, "-N", ""],
                                            check=True)
                             self.console.print(f"[green]✔ Clave de CA generada correctamente en: {ca_key_path}[/green]")
@@ -306,7 +308,7 @@ class SSHConnection:
                         "[yellow]⚠ No se pudo ejecutar sudo sin contraseña. Intentando con contraseña...[/yellow]")
 
                     # Pedir la contraseña SSH al usuario
-                    ssh_password = Prompt.ask("[🔐] Introduzca su contraseña SSH para sudo", password=True)
+                    ssh_password = Prompt.ask("[🔐] Introduzca su contraseña SSH para sudo")
 
                     # Llamada para introducir contraseña para usar sudo
                     output, error = self.run_sudo_command(ssh_password, cmd)
@@ -340,8 +342,8 @@ class SSHConnection:
         from Commands.KeyManagerCommand import KeyManagerCommand
         tiene_claves = Prompt.ask(
             "[ ] ¿Ya ha generado las claves SSH (pública y privada)?",
-            choices=["sí", "no"],
-            default="sí"
+            choices=["si", "no"],
+            default="si"
         )
         if tiene_claves == "no":
             self.console.print("[red]✖ Debe generar las claves SSH primero. Redirigiendo...[/red]")
@@ -350,8 +352,8 @@ class SSHConnection:
 
         clave_enviada = Prompt.ask(
             "[ ] ¿Ha enviado la clave pública al servidor remoto?",
-            choices=["sí", "no"],
-            default="sí"
+            choices=["si", "no"],
+            default="si"
         )
         if clave_enviada == "no":
             self.console.print("[red]✖ Debe copiar la clave pública al servidor. Utilice la autenticación por"
